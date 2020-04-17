@@ -8,12 +8,14 @@ import (
 type ArrayHashTable struct {
 	 writeMap []*Entry
 	 length   uint64
+	 distribution map[int]int
  }
 
 func NewAHT(length uint64) *ArrayHashTable  {
 	ht := new(ArrayHashTable)
 	ht.writeMap = make([]*Entry, length)
 	ht.length = length
+	ht.distribution = make(map[int]int,length)
 	return ht
 }
 
@@ -56,5 +58,23 @@ func (ht *ArrayHashTable) Print() {
 			print(" (", entry.KV.key, "  ", entry.KV.value, ") ")
 			entry = entry.next
 		}
+	}
+}
+func (ht *ArrayHashTable) Dis() {
+	for _, entry := range ht.writeMap {
+		count:=0
+		if entry == nil {
+			continue
+		}
+		for entry != nil {
+			count++
+			entry = entry.next
+		}
+		ht.distribution[count]++
+	}
+}
+func (ht *ArrayHashTable) PrintDis() {
+	for k,v:= range ht.distribution {
+		println(k,v)
 	}
 }

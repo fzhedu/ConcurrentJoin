@@ -32,6 +32,7 @@ type HashTable struct {
 	read     atomic.Value // readOnly
 	mu       sync.Mutex
 	misses   int
+	distribution map[int]int
 }
 
 // readOnly is an immutable struct stored atomically in the HashTable.read field.
@@ -44,6 +45,7 @@ func NewHt(length uint64) *HashTable {
 	ht := new(HashTable)
 	ht.writeMap = make(map[uint64]*Entry, length)
 	ht.length = length
+	ht.distribution = make(map[int]int,length)
 	return ht
 }
 
@@ -81,4 +83,21 @@ func (ht *HashTable) UnsafePrint() {
 		println()
 	}
 	println("---------")
+}
+func (ht *HashTable) UnsafeDis() {
+	for _, entry := range ht.writeMap {
+		count:=0
+		for entry != nil {
+			count++
+			entry = entry.next
+		}
+		if count != 0 {
+			ht.distribution[count]++
+		}
+	}
+}
+func (ht *HashTable) PrintDis() {
+	for key, value := range ht.distribution {
+		println(key,value)
+	}
 }

@@ -4,14 +4,19 @@ import (
 	"testing"
 )
 
-var num = uint64(400000)
+var num = uint64(4000000)
 var concurrency = 4
 var w = NewW(num)
 
+
+func BenchmarkUnsafeHTDis(b *testing.B) {
+	b.ResetTimer()
+	BenchamrkUnsafeHT(w,concurrency)
+}
 func BenchmarkUnsafeHT(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		BenchamrkUnsafeHT(w,concurrency)
+		BenchamrkUnsafeHT(w,0)
 	}
 }
 func BenchmarkCHT(b *testing.B) {
@@ -35,6 +40,10 @@ func BenchmarkSCHT(b *testing.B) {
 func BenchmarkACHT(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		BenchamrkACHT(w,concurrency)
+		BenchamrkACHT(w,concurrency,false)
 	}
 }
+/*func BenchmarkACHTDis(b *testing.B) {
+	b.ResetTimer()
+	BenchamrkACHT(w,concurrency,true)
+}*/

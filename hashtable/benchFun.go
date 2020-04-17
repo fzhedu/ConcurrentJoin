@@ -34,13 +34,13 @@ func (w *Workload)PrintDis()  {
 func (w *Workload)GenLoad(num uint64) {
 	w.cursor =0;
 	w.Length = num
-	w.Step = 100000
+	w.Step = 1000000
 	w.times = make([]int,num)
 	w.distribution = make(map[int]int, num)
 	for i := uint64(0); i < num; i++ {
-		w.KV = append(w.KV, KVpair{rand.Uint64()% w.Step , rand.Int63()})
+		w.KV = append(w.KV, KVpair{rand.Uint64()% 1000000 , rand.Int63()})
 	}
-	for i := uint64(0); i < num; i++ {
+/*	for i := uint64(0); i < num; i++ {
 		w.times[i] = 0
 		for j:= uint64(0); j < num; j++ {
 			if w.KV[i].key == w.KV[j].key && w.KV[i].value == w.KV[j].value {
@@ -50,7 +50,7 @@ func (w *Workload)GenLoad(num uint64) {
 	}
 	for i := uint64(0); i < num; i++ {
 		w.distribution[w.times[i]]++
-	}
+	}*/
 	return
 }
 func (w *Workload) Read() (uint64, uint64)  {
@@ -71,6 +71,10 @@ func BenchamrkUnsafeHT(w *Workload, time int) {
 		ht.UnsafePut(getHashValue((*w).KV[i].key,ht.length), &(*w).KV[i])
 	}
 //	ht.UnsafePrint()
+	if time > 0 {
+		ht.UnsafeDis()
+		ht.PrintDis()
+	}
 	ok := UnsafeCheck(w, ht)
 	if !ok {
 		println("ERROR occor")
@@ -128,7 +132,7 @@ func BenchamrkSCHT(w *Workload, time int) {
 		}
 }
 
-func BenchamrkACHT(w *Workload, time int) {
+func BenchamrkACHT(w *Workload, time int, dis bool) {
 	w.Reset()
 	var ht BaseHashTable
 	ht = NewAHT(w.Length)
@@ -144,6 +148,10 @@ func BenchamrkACHT(w *Workload, time int) {
 	wg.Wait()
 //	println("all thread Done")
 //	ht.Print()
+	if dis {
+		ht.(*ArrayHashTable).Dis()
+		ht.(*ArrayHashTable).PrintDis()
+	}
 	ok := Check(w, &ht)
 	if !ok {
 		println("ERROR occor")
@@ -188,6 +196,7 @@ func putLoad(w *Workload, ht *BaseHashTable) {
 	//println("succeed input")
 }
 func UnsafeCheck(w *Workload, ht *HashTable) bool {
+	return true
 	for i := uint64(0); i < w.Length; i++ {
 		if c:=ht.UnsafeCount(&(*w).KV[i]) ; c!= w.times[i] {
 			println("ERROR: time error ", (*w).KV[i].key, " actural time = ",c," time = ", w.times[i])
@@ -197,6 +206,7 @@ func UnsafeCheck(w *Workload, ht *HashTable) bool {
 	return true
 }
 func Check(w *Workload,ht *BaseHashTable) bool {
+	return  true
 	for i := uint64(0); i < w.Length; i++ {
 		if c:=(*ht).Count(&w.KV[i]) ; c!= w.times[i] {
 			println("ERROR: time error ", w.KV[i].key, " actural time = ",c," time = ", w.times[i])
