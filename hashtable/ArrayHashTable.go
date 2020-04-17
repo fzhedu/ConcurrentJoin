@@ -30,10 +30,12 @@ func (ht *ArrayHashTable) ConcurrentPut(hashValue uint64, kv *KVpair) {
 		}
 	}
 }
-
+func (ht *ArrayHashTable) GetLen() uint64 {
+	return ht.length
+}
 func (ht *ArrayHashTable) Count(kv *KVpair) int {
 	count := 0
-	hashValue := getHashValue(kv.key)
+	hashValue := getHashValue(kv.key,ht.length)
 	entry := (*Entry)(ht.writeMap[hashValue])
 	for entry != nil {
 		if entry.KV.key == kv.key && entry.KV.value == kv.value {

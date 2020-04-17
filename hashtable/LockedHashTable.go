@@ -13,8 +13,11 @@ type LockedHashTable struct {
 func NewLHT(length uint64) *LockedHashTable  {
 	ht := new(LockedHashTable)
 	ht.writeMap = make(map[uint64]*Entry, length)
-	ht.length =0
+	ht.length =length
 	return ht
+}
+func (ht *LockedHashTable) GetLen() uint64 {
+	return ht.length
 }
 
 func (ht *LockedHashTable) ConcurrentPut(hashValue uint64, kv *KVpair) {
@@ -22,15 +25,15 @@ func (ht *LockedHashTable) ConcurrentPut(hashValue uint64, kv *KVpair) {
 	newEntry.next = nil
 	newEntry.KV = *kv
 	ht.Lock.Lock()
-	oldEntry := ht.writeMap[newEntry.KV.key]
-	ht.writeMap[newEntry.KV.key]=newEntry
+	oldEntry := ht.writeMap[hashValue]
+	ht.writeMap[hashValue]=newEntry
 	newEntry.next = oldEntry
 	ht.Lock.Unlock()
 }
 
 func (ht *LockedHashTable) Count(kv *KVpair) int {
 	count := 0
-	hashValue := getHashValue(kv.key)
+	hashValue := getHashValue(kv.key,ht.length)
 	entry := (*Entry)(ht.writeMap[hashValue])
 	for entry != nil {
 		if entry.KV.key == kv.key && entry.KV.value == kv.value {

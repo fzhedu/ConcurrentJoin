@@ -5,11 +5,9 @@ import (
 	"sync/atomic"
 )
 
-var num = uint64(1000007)
 
-func getHashValue(key uint64) uint64 {
-	return key
-	return key % uint64(num*1.0/3)
+func getHashValue(key uint64, seed uint64) uint64 {
+	return key % seed
 }
 
 type KVpair struct {
@@ -25,6 +23,7 @@ type BaseHashTable interface {
 	ConcurrentPut(hashValue uint64, kv *KVpair)
 	Count(kv *KVpair) int
 	Print()
+	GetLen() uint64
 }
 
 type HashTable struct {
@@ -44,6 +43,7 @@ type readOnly struct {
 func NewHt(length uint64) *HashTable {
 	ht := new(HashTable)
 	ht.writeMap = make(map[uint64]*Entry, length)
+	ht.length = length
 	return ht
 }
 
@@ -52,13 +52,16 @@ func (ht *HashTable) UnsafePut(hashValue uint64, kv *KVpair) {
 	newEntry := new(Entry)
 	newEntry.KV = *kv
 	newEntry.next = (*Entry)(oldEntry)
-	ht.length++
 	ht.writeMap[hashValue] = newEntry
+}
+
+func (ht *HashTable) GetLen() uint64  {
+	return ht.length
 }
 
 func (ht *HashTable) UnsafeCount(kv *KVpair) int {
 	count := 0
-	hashValue := getHashValue(kv.key)
+	hashValue := getHashValue(kv.key,ht.length)
 	entry := (*Entry)(ht.writeMap[hashValue])
 	for entry != nil {
 		if entry.KV.key == kv.key && entry.KV.value == kv.value {

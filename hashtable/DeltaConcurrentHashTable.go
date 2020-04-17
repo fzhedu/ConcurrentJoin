@@ -102,7 +102,7 @@ func (ht *DCHashTable) GetABucket(hashValue uint64) (kvPtr []*Entry) {
 func (ht *DCHashTable) Find(kv *KVpair) bool {
 	ht.Synchronize()
 	read, _ := ht.read.Load().(readOnly)
-	hashValue := getHashValue(kv.key)
+	hashValue := getHashValue(kv.key,ht.length)
 	entry := (*Entry)(read.m[hashValue])
 	for entry != nil {
 		if entry.KV.key == kv.key && entry.KV.value == kv.value {
@@ -117,7 +117,7 @@ func (ht *DCHashTable) Count(kv *KVpair) int {
 	ht.Synchronize()
 	read, _ := ht.read.Load().(readOnly)
 	count := 0
-	hashValue := getHashValue(kv.key)
+	hashValue := getHashValue(kv.key,ht.length)
 	entry := (*Entry)(read.m[hashValue])
 	for entry != nil {
 		if entry.KV.key == kv.key && entry.KV.value == kv.value {

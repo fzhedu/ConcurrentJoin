@@ -16,25 +16,26 @@ func (e *Entry) CASinsert(newEntry *Entry) {
 	}
 }
 
+
 func (ht *HashTable) ConcurrentPut(hashValue uint64, kv *KVpair) {
 	newEntry := new(Entry)
 	newEntry.next = nil
 	newEntry.KV = *kv
 	read, _ := ht.read.Load().(readOnly)
-	if v, ok := read.m[newEntry.KV.key]; ok {
+	if v, ok := read.m[hashValue]; ok {
 		// update an Entry: insert a key into read only map
 		v.CASinsert(newEntry)
 	} else {
 		ht.mu.Lock()
 		// recheck
 		read, _ = ht.read.Load().(readOnly)
-		if v, ok := read.m[newEntry.KV.key]; ok {
+		if v, ok := read.m[hashValue]; ok {
 			ht.mu.Unlock()
 			// update an Entry: insert a key into read only map
 			v.CASinsert(newEntry)
-		} else if v, ok := ht.writeMap[newEntry.KV.key]; ok {
+		} else if v, ok := ht.writeMap[hashValue]; ok {
 			// only exist in writeMap map
-			ht.writeMap[newEntry.KV.key] = newEntry
+			ht.writeMap[hashValue] = newEntry
 			newEntry.next = v
 			// a miss occurs
 			ht.missLocked()
@@ -45,7 +46,7 @@ func (ht *HashTable) ConcurrentPut(hashValue uint64, kv *KVpair) {
 				ht.dirtyLocked()
 				ht.read.Store(readOnly{read.m, true})
 			}
-			ht.writeMap[newEntry.KV.key] = newEntry
+			ht.writeMap[hashValue] = newEntry
 			ht.mu.Unlock()
 		}
 	}
@@ -83,7 +84,7 @@ func (ht *HashTable) Synchronize() {
 		ht.mu.Lock()
 		read, _ = ht.read.Load().(readOnly)
 		if read.amended {
-			read = readOnly{m: ht.writeMap}
+			read = readOnly{ ht.writeMap,false}
 			ht.read.Store(read)
 			ht.writeMap = nil
 			ht.misses = 0
@@ -107,7 +108,7 @@ func (ht *HashTable) GetABucket(hashValue uint64) (kvPtr []*Entry) {
 func (ht *HashTable) Find(kv *KVpair) bool {
 	ht.Synchronize()
 	read, _ := ht.read.Load().(readOnly)
-	hashValue := getHashValue(kv.key)
+	hashValue := getHashValue(kv.key,ht.length)
 	entry := (*Entry)(read.m[hashValue])
 	for entry != nil {
 		if entry.KV.key == kv.key && entry.KV.value == kv.value {
@@ -122,7 +123,7 @@ func (ht *HashTable) Count(kv *KVpair) int {
 	ht.Synchronize()
 	read, _ := ht.read.Load().(readOnly)
 	count := 0
-	hashValue := getHashValue(kv.key)
+	hashValue := getHashValue(kv.key,ht.length)
 	entry := (*Entry)(read.m[hashValue])
 	for entry != nil {
 		if entry.KV.key == kv.key && entry.KV.value == kv.value {
@@ -137,11 +138,11 @@ func (ht *HashTable) Count(kv *KVpair) int {
 func (ht *HashTable) Print() {
 	ht.Synchronize()
 	read, _ := ht.read.Load().(readOnly)
-	for k, entry := range read.m {
-		println("------------", k)
+	for _, entry := range read.m {
 		for entry != nil {
 			print(" (", entry.KV.key, "  ", entry.KV.value, ") ")
 			entry = entry.next
 		}
+		println()
 	}
 }
