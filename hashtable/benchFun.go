@@ -13,25 +13,32 @@ type Workload struct {
 	Length uint64
 	Step   uint64
 	times []int
+	distribution map[int]int
 }
 
 func NewW(num uint64) *Workload  {
 	w:=new(Workload)
 	w.GenLoad(num)
+	w.PrintDis()
 	return w
 }
 
 func (w *Workload) Reset () {
 	w.cursor = 0
 }
-
+func (w *Workload)PrintDis()  {
+	for k,v := range w.distribution {
+		println(k,"  ",v)
+	}
+}
 func (w *Workload)GenLoad(num uint64) {
 	w.cursor =0;
 	w.Length = num
-	w.Step = 10000
+	w.Step = 100000
 	w.times = make([]int,num)
+	w.distribution = make(map[int]int, num)
 	for i := uint64(0); i < num; i++ {
-		w.KV = append(w.KV, KVpair{rand.Uint64()% num , rand.Int63()})
+		w.KV = append(w.KV, KVpair{rand.Uint64()% w.Step , rand.Int63()})
 	}
 	for i := uint64(0); i < num; i++ {
 		w.times[i] = 0
@@ -41,16 +48,19 @@ func (w *Workload)GenLoad(num uint64) {
 			}
 		}
 	}
+	for i := uint64(0); i < num; i++ {
+		w.distribution[w.times[i]]++
+	}
 	return
 }
 func (w *Workload) Read() (uint64, uint64)  {
 	old := atomic.AddUint64(&w.cursor,w.Step)
-	if old < w.Length {
+	if old <= w.Length {
 		return  old - w.Step, old
-	} else if old > w.Length  && old < w.Length + w.Step{
+	} else if old > w.Length  && old - w.Step < w.Length{
 		return  old - w.Step, w.Length
 	} else {
-		return 0, 0
+		return w.Length, w.Length
 	}
 }
 
@@ -83,7 +93,7 @@ func BenchamrkCHT(w *Workload, time int) {
 		}()
 	}
 	wg.Wait()
-	//ht.Print()
+//	ht.Print()
 	ok := Check(w, &ht)
 	if !ok {
 		println("ERROR occor")
@@ -158,7 +168,7 @@ func BenchamrkLCHT(w *Workload, time int) {
 	}
 	wg.Wait()
 //	println("all thread Done")
-//	ht.Print()
+	//ht.Print()
 	ok := Check(w, &ht)
 	if !ok {
 		println("ERROR occor")
@@ -169,8 +179,11 @@ func BenchamrkLCHT(w *Workload, time int) {
 }
 
 func putLoad(w *Workload, ht *BaseHashTable) {
-	for i, end := w.Read(); i < end; i++ {
-		(*ht).ConcurrentPut(getHashValue((*w).KV[i].key,(*ht).GetLen()), &(*w).KV[i])
+
+	for begin,end := w.Read(); begin < w.Length; begin,end = w.Read(){
+		for i:= begin; i < end ; i++ {
+			(*ht).ConcurrentPut(getHashValue(w.KV[i].key,(*ht).GetLen()), &(w.KV[i]))
+		}
 	}
 	//println("succeed input")
 }
@@ -185,8 +198,8 @@ func UnsafeCheck(w *Workload, ht *HashTable) bool {
 }
 func Check(w *Workload,ht *BaseHashTable) bool {
 	for i := uint64(0); i < w.Length; i++ {
-		if c:=(*ht).Count(&(*w).KV[i]) ; c!= w.times[i] {
-			println("ERROR: time error ", (*w).KV[i].key, " actural time = ",c," time = ", w.times[i])
+		if c:=(*ht).Count(&w.KV[i]) ; c!= w.times[i] {
+			println("ERROR: time error ", w.KV[i].key, " actural time = ",c," time = ", w.times[i])
 			return false
 		}
 	}

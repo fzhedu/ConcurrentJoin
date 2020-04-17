@@ -73,11 +73,12 @@ func (ht *HashTable) UnsafeCount(kv *KVpair) int {
 }
 
 func (ht *HashTable) UnsafePrint() {
-	for k, entry := range ht.writeMap {
-		println("------------", k)
+	for _, entry := range ht.writeMap {
 		for entry != nil {
 			print(" (", entry.KV.key, "  ", entry.KV.value, ") ")
 			entry = entry.next
 		}
+		println()
 	}
+	println("---------")
 }

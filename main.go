@@ -4,24 +4,21 @@ import (
 	"github.com/ParallelBuild/hashtable"
 )
 
-var num = uint64(4000)
+var num = uint64(10000)
 var concurrency = 10
 
 func main() {
+	var w  hashtable.Workload
+	w.GenLoad(num)
+	w.PrintDis()
 
-	for
+	//for
 	{
-		var w  hashtable.Workload
-		w.GenLoad(num)
-		//hashtable.BenchamrkUnsafeHT(&w,concurrency)
-		w.Reset()
+		hashtable.BenchamrkUnsafeHT(&w,concurrency)
 		hashtable.BenchamrkCHT(&w,concurrency)
-/*		w.Reset()
-		hashtable.BenchamrkLCHT(&w,concurrency)
-		w.Reset()
-		hashtable.BenchamrkSCHT(&w,concurrency)
-		w.Reset()
-		hashtable.BenchamrkACHT(&w,concurrency)*/
+		//hashtable.BenchamrkLCHT(&w,concurrency)
+		//hashtable.BenchamrkSCHT(&w,concurrency)
+		//hashtable.BenchamrkACHT(&w,concurrency)
 	}
 
 }

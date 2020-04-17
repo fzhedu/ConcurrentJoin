@@ -46,10 +46,11 @@ func (ht *LockedHashTable) Count(kv *KVpair) int {
 
 func (ht *LockedHashTable) Print() {
 	for k, entry := range ht.writeMap {
-		println("------------", k)
+		print("------------", k)
 		for entry != nil {
 			print(" (", entry.KV.key, "  ", entry.KV.value, ") ")
 			entry = entry.next
 		}
+		println()
 	}
 }

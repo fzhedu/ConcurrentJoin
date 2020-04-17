@@ -4,8 +4,8 @@ import (
 	"testing"
 )
 
-var num = uint64(4000)
-var concurrency = 10
+var num = uint64(400000)
+var concurrency = 4
 var w = NewW(num)
 
 func BenchmarkUnsafeHT(b *testing.B) {
