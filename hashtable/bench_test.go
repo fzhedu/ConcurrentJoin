@@ -45,6 +45,12 @@ func BenchmarkCMHT(b *testing.B) {
 		BenchamrkCMHT(w,concurrency,false)
 	}
 }
+func BenchmarkConcMHT(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		BenchamrkConcMHT(w,concurrency,false)
+	}
+}
 func BenchmarkACHT(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

@@ -170,6 +170,33 @@ func BenchamrkCMHT(w *Workload, time int, check bool) {
 		}
 	}
 }
+func BenchamrkConcMHT(w *Workload, time int, check bool) {
+	w.Reset()
+	var ht BaseHashTable
+	ht = NewConcMHT(w.Length)
+	wg := &sync.WaitGroup{}
+	wg.Add(time)
+
+	for t := 0; t < time; t++ {
+		go func() {
+			defer wg.Done()
+			putLoad(w, &ht)
+		}()
+	}
+	wg.Wait()
+	if check {
+		println("all thread Done")
+		//	ht.Print()
+		ok := Check(w, &ht)
+		if !ok {
+			println("ERROR occor")
+			os.Exit(1)
+			//os.Exit(0)
+		} else {
+			println("ok")
+		}
+	}
+}
 func BenchamrkACHT(w *Workload, time int, dis,check bool) {
 	w.Reset()
 	var ht BaseHashTable

@@ -5,7 +5,7 @@ import (
 )
 
 var num = uint64(4000)
-var concurrency = 10
+var concurrency = 4
 var Gstep = uint64(2)
 var Gmod = uint64(1000)
 
@@ -16,7 +16,8 @@ func main() {
 
 	for
 	{
-		hashtable.BenchamrkCMHT(&w,concurrency,true)
+		hashtable.BenchamrkConcMHT(&w,concurrency,true)
+		//hashtable.BenchamrkCMHT(&w,concurrency,true)
 		//hashtable.BenchamrkUnsafeHT(&w,concurrency,false)
 		//hashtable.BenchamrkCHT(&w,concurrency,false)
 		//hashtable.BenchamrkLCHT(&w,concurrency,false)
