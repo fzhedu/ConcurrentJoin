@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 )
 
+
 type Workload struct {
 	KV     []KVpair
 	cursor uint64
@@ -16,9 +17,10 @@ type Workload struct {
 	distribution map[int]int
 }
 
-func NewW(num uint64) *Workload  {
+
+func NewW(num, Gstep,Gmod uint64) *Workload  {
 	w:=new(Workload)
-	w.GenLoad(num)
+	w.GenLoad(num,Gstep,Gmod,false)
 	w.PrintDis()
 	return w
 }
@@ -31,26 +33,28 @@ func (w *Workload)PrintDis()  {
 		println(k,"  ",v)
 	}
 }
-func (w *Workload)GenLoad(num uint64) {
+func (w *Workload)GenLoad(num uint64, Gstep, Gmod uint64, check bool) {
 	w.cursor =0;
 	w.Length = num
-	w.Step = 1000000
+	w.Step = Gstep
 	w.times = make([]int,num)
 	w.distribution = make(map[int]int, num)
 	for i := uint64(0); i < num; i++ {
-		w.KV = append(w.KV, KVpair{rand.Uint64()% 1000000 , rand.Int63()})
+		w.KV = append(w.KV, KVpair{rand.Uint64()% Gmod , rand.Int63()})
 	}
-/*	for i := uint64(0); i < num; i++ {
-		w.times[i] = 0
-		for j:= uint64(0); j < num; j++ {
+	if check {
+		for i := uint64(0); i < num; i++ {
+			w.times[i] = 0
+			for j:= uint64(0); j < num; j++ {
 			if w.KV[i].key == w.KV[j].key && w.KV[i].value == w.KV[j].value {
 				w.times[i]++
 			}
 		}
+		}
+		for i := uint64(0); i < num; i++ {
+			w.distribution[w.times[i]]++
+		}
 	}
-	for i := uint64(0); i < num; i++ {
-		w.distribution[w.times[i]]++
-	}*/
 	return
 }
 func (w *Workload) Read() (uint64, uint64)  {
@@ -64,26 +68,28 @@ func (w *Workload) Read() (uint64, uint64)  {
 	}
 }
 
-func BenchamrkUnsafeHT(w *Workload, time int) {
+func BenchamrkUnsafeHT(w *Workload, time int, check bool) {
 	w.Reset()
 	ht := NewHt( w.Length)
 	for i := uint64(0); i < w.Length; i++ {
 		ht.UnsafePut(getHashValue((*w).KV[i].key,ht.length), &(*w).KV[i])
 	}
-//	ht.UnsafePrint()
 	if time > 0 {
 		ht.UnsafeDis()
 		ht.PrintDis()
 	}
-	ok := UnsafeCheck(w, ht)
-	if !ok {
-		println("ERROR occor")
-		os.Exit(1)
-	} else {
-		//println("ok")
+	if check {
+		ht.UnsafePrint()
+		ok := UnsafeCheck(w, ht)
+		if !ok {
+			println("ERROR occor")
+			os.Exit(1)
+			//println("ok")
+		} else {
+		}
 	}
 }
-func BenchamrkCHT(w *Workload, time int) {
+func BenchamrkCHT(w *Workload, time int, check bool) {
 	w.Reset()
 	var ht BaseHashTable
 	ht = NewHt(w.Length)
@@ -97,16 +103,20 @@ func BenchamrkCHT(w *Workload, time int) {
 		}()
 	}
 	wg.Wait()
-//	ht.Print()
-	ok := Check(w, &ht)
-	if !ok {
-		println("ERROR occor")
-		os.Exit(1)
-	} else {
-		//println("ok")
+	if check {
+		println("all thread Done")
+		ht.Print()
+		ok := Check(w, &ht)
+		if !ok {
+			println("ERROR occor")
+			os.Exit(1)
+			//os.Exit(0)
+		} else {
+			println("ok")
+		}
 	}
 }
-func BenchamrkSCHT(w *Workload, time int) {
+func BenchamrkSCHT(w *Workload, time int, check bool) {
 	w.Reset()
 	var ht BaseHashTable
 	ht = NewSHT(w.Length)
@@ -120,19 +130,47 @@ func BenchamrkSCHT(w *Workload, time int) {
 		}()
 	}
 	wg.Wait()
-//	println("all thread Done")
-	//	ht.Print()
-	ok := Check(w, &ht)
+	if check {
+		println("all thread Done")
+		ht.Print()
+		ok := Check(w, &ht)
 		if !ok {
 			println("ERROR occor")
 			os.Exit(1)
-		} else {
 			//os.Exit(0)
-			//println("ok")
+		} else {
+			println("ok")
 		}
+	}
 }
+func BenchamrkCMHT(w *Workload, time int, check bool) {
+	w.Reset()
+	var ht BaseHashTable
+	ht = NewCMHT(w.Length)
+	wg := &sync.WaitGroup{}
+	wg.Add(time)
 
-func BenchamrkACHT(w *Workload, time int, dis bool) {
+	for t := 0; t < time; t++ {
+		go func() {
+			defer wg.Done()
+			putLoad(w, &ht)
+		}()
+	}
+	wg.Wait()
+	if check {
+		println("all thread Done")
+	//	ht.Print()
+		ok := Check(w, &ht)
+		if !ok {
+			println("ERROR occor")
+			os.Exit(1)
+			//os.Exit(0)
+		} else {
+			println("ok")
+		}
+	}
+}
+func BenchamrkACHT(w *Workload, time int, dis,check bool) {
 	w.Reset()
 	var ht BaseHashTable
 	ht = NewAHT(w.Length)
@@ -146,22 +184,25 @@ func BenchamrkACHT(w *Workload, time int, dis bool) {
 		}()
 	}
 	wg.Wait()
-//	println("all thread Done")
-//	ht.Print()
+
 	if dis {
 		ht.(*ArrayHashTable).Dis()
 		ht.(*ArrayHashTable).PrintDis()
 	}
-	ok := Check(w, &ht)
-	if !ok {
-		println("ERROR occor")
-		os.Exit(1)
-	} else {
-		//os.Exit(0)
-//		println("ok")
+	if check {
+		println("all thread Done")
+		ht.Print()
+		ok := Check(w, &ht)
+		if !ok {
+			println("ERROR occor")
+			os.Exit(1)
+			//os.Exit(0)
+		} else {
+			println("ok")
+		}
 	}
 }
-func BenchamrkLCHT(w *Workload, time int) {
+func BenchamrkLCHT(w *Workload, time int, check bool) {
 	w.Reset()
 	var ht BaseHashTable
 	ht = NewLHT(w.Length)
@@ -175,14 +216,17 @@ func BenchamrkLCHT(w *Workload, time int) {
 		}()
 	}
 	wg.Wait()
-//	println("all thread Done")
-	//ht.Print()
-	ok := Check(w, &ht)
-	if !ok {
-		println("ERROR occor")
-		os.Exit(1)
-	} else {
-	//	println("ok")
+	if check {
+		println("all thread Done")
+		ht.Print()
+		ok := Check(w, &ht)
+		if !ok {
+			println("ERROR occor")
+			os.Exit(1)
+			//os.Exit(0)
+		} else {
+			println("ok")
+		}
 	}
 }
 
@@ -206,7 +250,7 @@ func UnsafeCheck(w *Workload, ht *HashTable) bool {
 	return true
 }
 func Check(w *Workload,ht *BaseHashTable) bool {
-	return  true
+	//return  true
 	for i := uint64(0); i < w.Length; i++ {
 		if c:=(*ht).Count(&w.KV[i]) ; c!= w.times[i] {
 			println("ERROR: time error ", w.KV[i].key, " actural time = ",c," time = ", w.times[i])
