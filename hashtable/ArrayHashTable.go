@@ -19,15 +19,13 @@ func NewAHT(length uint64) *ArrayHashTable  {
 	return ht
 }
 
-func (ht *ArrayHashTable) ConcurrentPut(hashValue uint64, kv *KVpair) {
-	newEntry := new(Entry)
-	newEntry.next = nil
-	newEntry.KV = *kv
+func (ht *ArrayHashTable) ConcurrentPut(entry *Entry) {
+	hashValue:=getHashValue(entry.KV.key,ht.length)
 	for {
 		oldEntry := atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&ht.writeMap[hashValue])))
-		ok := atomic.CompareAndSwapPointer((*unsafe.Pointer)(unsafe.Pointer(&ht.writeMap[hashValue])), oldEntry, unsafe.Pointer(newEntry))
+		ok := atomic.CompareAndSwapPointer((*unsafe.Pointer)(unsafe.Pointer(&ht.writeMap[hashValue])), oldEntry, unsafe.Pointer(entry))
 		if ok {
-			newEntry.next = (*Entry)(oldEntry)
+			entry.next = (*Entry)(oldEntry)
 			return
 		}
 	}

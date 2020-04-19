@@ -14,23 +14,21 @@ func NewCHT(length uint64) *DCHashTable {
 	return ht
 }
 
-func (ht *DCHashTable) ConcurrentPut(hashValue uint64, kv *KVpair) {
-	newEntry := new(Entry)
-	newEntry.next = nil
-	newEntry.KV = *kv
+func (ht *DCHashTable) ConcurrentPut(newEntry *Entry) {
+	hashValue:=getHashValue(newEntry.KV.key,ht.length)
 	read, _ := ht.read.Load().(readOnly)
-	if v, ok := read.m[newEntry.KV.key]; ok {
+	if v, ok := read.m[hashValue]; ok {
 		// update an Entry: insert a key into read only map
 		v.CASinsert(newEntry)
 	} else {
 		ht.mu.Lock()
 		// recheck
 		read, _ = ht.read.Load().(readOnly)
-		if v, ok := read.m[newEntry.KV.key]; ok {
+		if v, ok := read.m[hashValue]; ok {
 			ht.mu.Unlock()
 			// update an Entry: insert a key into read only map
 			v.CASinsert(newEntry)
-		} else if v, ok := ht.writeMap[newEntry.KV.key]; ok {
+		} else if v, ok := ht.writeMap[hashValue]; ok {
 			// only exist in writeMap map
 			// update the next of the first node v, i.e., insert a new node after the first node
 			oldEntry := v.next
@@ -46,7 +44,7 @@ func (ht *DCHashTable) ConcurrentPut(hashValue uint64, kv *KVpair) {
 			}
 			ht.delta[ht.cursor] = newEntry
 			ht.cursor++
-			ht.writeMap[newEntry.KV.key] = newEntry
+			ht.writeMap[hashValue] = newEntry
 			ht.exchangeAndUpdate(false)
 			ht.mu.Unlock()
 		}

@@ -20,10 +20,8 @@ func (ht *ConcMapHashTable) GetLen() uint64 {
 	return ht.length
 }
 
-func (ht *ConcMapHashTable) ConcurrentPut(hashValue uint64, kv *KVpair) {
-	newEntry := new(Entry)
-	newEntry.next = nil
-	newEntry.KV = *kv
+func (ht *ConcMapHashTable) ConcurrentPut(entry *Entry) {
+	hashValue:=getHashValue(entry.KV.key,ht.length)
 	cb := func(exists bool, valueInMap, newValue *Entry) *Entry {
 		if !exists {
 			return newValue
@@ -32,7 +30,7 @@ func (ht *ConcMapHashTable) ConcurrentPut(hashValue uint64, kv *KVpair) {
 		nv.next = valueInMap
 		return nv
 	}
-	ht.mp.Upsert(hashValue, newEntry, cb)
+	ht.mp.Upsert(hashValue, entry, cb)
 
 }
 func (ht *ConcMapHashTable) Count(kv *KVpair) int {

@@ -20,14 +20,12 @@ func (ht *LockedHashTable) GetLen() uint64 {
 	return ht.length
 }
 
-func (ht *LockedHashTable) ConcurrentPut(hashValue uint64, kv *KVpair) {
-	newEntry := new(Entry)
-	newEntry.next = nil
-	newEntry.KV = *kv
+func (ht *LockedHashTable) ConcurrentPut(newEntry *Entry) {
+	hashValue :=getHashValue(newEntry.KV.key,ht.length)
 	ht.Lock.Lock()
 	oldEntry := ht.writeMap[hashValue]
-	ht.writeMap[hashValue]=newEntry
 	newEntry.next = oldEntry
+	ht.writeMap[hashValue]=newEntry
 	ht.Lock.Unlock()
 }
 

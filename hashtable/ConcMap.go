@@ -4,7 +4,7 @@ import (
 	"sync"
 )
 
-var SHARD_COUNT = 32
+var SHARD_COUNT = 320
 
 
 // A "thread" safe map of type string:Anything.
@@ -52,10 +52,10 @@ func (m ConcurrentMap) Upsert(key uint64, value *Entry, cb UpsertCb) (res *Entry
 func (m ConcurrentMap) Get(key uint64) (*Entry, bool) {
 	// Get shard
 	shard := m.GetShard(key)
-	shard.RLock()
+//	shard.RLock()
 	// Get item from shard.
 	val, ok := shard.items[key]
-	shard.RUnlock()
+//	shard.RUnlock()
 	return val, ok
 }
 

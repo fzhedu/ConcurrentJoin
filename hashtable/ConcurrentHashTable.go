@@ -17,14 +17,12 @@ func (e *Entry) CASinsert(newEntry *Entry) {
 }
 
 
-func (ht *HashTable) ConcurrentPut(hashValue uint64, kv *KVpair) {
-	newEntry := new(Entry)
-	newEntry.next = nil
-	newEntry.KV = *kv
+func (ht *HashTable) ConcurrentPut(entry *Entry) {
+	hashValue :=getHashValue(entry.KV.key,ht.length)
 	read, _ := ht.read.Load().(readOnly)
 	if v, ok := read.m[hashValue]; ok {
 		// update an Entry: insert a key into read only map
-		v.CASinsert(newEntry)
+		v.CASinsert(entry)
 	} else {
 		ht.mu.Lock()
 		// recheck
@@ -32,11 +30,11 @@ func (ht *HashTable) ConcurrentPut(hashValue uint64, kv *KVpair) {
 		if v, ok := read.m[hashValue]; ok {
 			ht.mu.Unlock()
 			// update an Entry: insert a key into read only map
-			v.CASinsert(newEntry)
+			v.CASinsert(entry)
 		} else if v, ok := ht.writeMap[hashValue]; ok {
 			// only exist in writeMap map
-			ht.writeMap[hashValue] = newEntry
-			newEntry.next = v
+			ht.writeMap[hashValue] = entry
+			entry.next = v
 			// a miss occurs
 			ht.missLocked()
 			ht.mu.Unlock()
@@ -46,7 +44,7 @@ func (ht *HashTable) ConcurrentPut(hashValue uint64, kv *KVpair) {
 				ht.dirtyLocked()
 				ht.read.Store(readOnly{read.m, true})
 			}
-			ht.writeMap[hashValue] = newEntry
+			ht.writeMap[hashValue] = entry
 			ht.mu.Unlock()
 		}
 	}

@@ -20,7 +20,7 @@ type Entry struct {
 }
 
 type BaseHashTable interface {
-	ConcurrentPut(hashValue uint64, kv *KVpair)
+	ConcurrentPut(entry *Entry)
 	Count(kv *KVpair) int
 	Print()
 	GetLen() uint64
@@ -49,12 +49,11 @@ func NewHt(length uint64) *HashTable {
 	return ht
 }
 
-func (ht *HashTable) UnsafePut(hashValue uint64, kv *KVpair) {
+func (ht *HashTable) UnsafePut(entry *Entry) {
+	hashValue:= getHashValue(entry.KV.key,ht.length)
 	oldEntry := ht.writeMap[hashValue]
-	newEntry := new(Entry)
-	newEntry.KV = *kv
-	newEntry.next = (*Entry)(oldEntry)
-	ht.writeMap[hashValue] = newEntry
+	entry.next = (*Entry)(oldEntry)
+	ht.writeMap[hashValue] = entry
 }
 
 func (ht *HashTable) GetLen() uint64  {

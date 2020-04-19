@@ -21,10 +21,8 @@ func (ht *CmapHashTable) GetLen() uint64 {
 	return ht.length
 }
 
-func (ht *CmapHashTable) ConcurrentPut(hashValue uint64, kv *KVpair) {
-	newEntry := new(Entry)
-	newEntry.next = nil
-	newEntry.KV = *kv
+func (ht *CmapHashTable) ConcurrentPut(entry *Entry) {
+	hashValue:=getHashValue(entry.KV.key,ht.length)
 	cb := func(exists bool, valueInMap interface{}, newValue interface{}) interface{} {
 		if !exists {
 			return newValue
@@ -33,7 +31,7 @@ func (ht *CmapHashTable) ConcurrentPut(hashValue uint64, kv *KVpair) {
 		nv.next = valueInMap.(*Entry)
 		return nv
 	}
-	ht.mp.Upsert(string(hashValue), newEntry, cb)
+	ht.mp.Upsert(string(hashValue), entry, cb)
 
 }
 func (ht *CmapHashTable) Count(kv *KVpair) int {

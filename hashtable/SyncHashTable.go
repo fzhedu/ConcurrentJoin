@@ -21,22 +21,19 @@ func NewSHT(length uint64) *SyncHashTable  {
 func (ht *SyncHashTable) GetLen() uint64 {
 	return ht.length
 }
-func (ht *SyncHashTable) ConcurrentPut(hashValue uint64, kv *KVpair) {
-	newEntry := new(Entry)
-	newEntry.next = nil
-	newEntry.KV = *kv
-	oldp, existed :=ht.writeMap.LoadOrStore(hashValue, newEntry)
+func (ht *SyncHashTable) ConcurrentPut(entry *Entry) {
+	hashValue:=getHashValue(entry.KV.key,ht.length)
+	oldp, existed :=ht.writeMap.LoadOrStore(hashValue, entry)
 	if existed {
 		for {
 			//oldp, ok := ht.writeMap.Load(hashValue)
 			oldv := atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&(oldp.(*Entry).next))))
-			if  atomic.CompareAndSwapPointer((*unsafe.Pointer)(unsafe.Pointer(&(oldp.(*Entry).next))), unsafe.Pointer(oldv), unsafe.Pointer(newEntry)) {
-				newEntry.next = (*Entry)(oldv)
+			if  atomic.CompareAndSwapPointer((*unsafe.Pointer)(unsafe.Pointer(&(oldp.(*Entry).next))), unsafe.Pointer(oldv), unsafe.Pointer(entry)) {
+				entry.next = (*Entry)(oldv)
 				break
 			}
 		}
 	}
-
 }
 
 func (ht *SyncHashTable) Count(kv *KVpair) int {
