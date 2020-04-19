@@ -1,3 +1,4 @@
+```
 mac:hashtable fzh$ go test -v -bench=. 
 ---------------workload---------------
 11 45025
@@ -42,4 +43,4 @@ BenchmarkConcHTRead-12      	       1	1969843381 ns/op
 BenchmarkAHTRead-12         	       1	1707496822 ns/op
 PASS
 ok  	github.com/ParallelBuild/hashtable	43.563s
-
+```
