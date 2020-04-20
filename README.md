@@ -32,7 +32,7 @@ go test -v -bench=. -benchmem -benchtime 10s
 16 1408
 2 22411
 ```
-SHARD_COUNT=320, there are 320 locks for `concurrentMap`
+[on mac] set concurrency = 4 in bench_test.go, SHARD_COUNT=320, there are 320 locks for `concurrentMap`
 ```
 BenchmarkUnsafeHT-12        	      10	1115802586 ns/op	809876892 B/op	     880 allocs/op
 // inspried by go.sync.map, but just use a mutex to solve write conflicts on a map, it is slower than unsafeHT
@@ -56,7 +56,7 @@ BenchmarkAHTRead-12         	       6	1743778684 ns/op	      16 B/op	       1 al
 PASS
 ok  	github.com/ParallelBuild/hashtable	262.071s
 ```
-SHARD_COUNT=1000
+[on Mac] set concurrency = 4 in bench_test.go, SHARD_COUNT=1000
 ```
 BenchmarkUnsafeHT-12        	      10	1141535048 ns/op	809876892 B/op	     880 allocs/op
 BenchmarkCHT-12             	       8	1281362889 ns/op	873108256 B/op	   20059 allocs/op
@@ -73,6 +73,28 @@ BenchmarkCMHTRead-12        	       4	3125928058 ns/op	     208 B/op	       1 al
 BenchmarkConcHTRead-12      	       5	2042129845 ns/op	      92 B/op	       1 allocs/op
 BenchmarkAHTRead-12         	       6	1729392486 ns/op	     272 B/op	       1 allocs/op
 ```
+[on Linux] set concurrency = 40 in bench_test.go, SHARD_COUNT = 320
+
+```
+BenchmarkUnsafeHT-40        	       9	1455807438 ns/op	809881907 B/op	     889 allocs/op
+BenchmarkCHT-40             	
+       4	3364232825 ns/op	873799196 B/op	   20598 allocs/op
+BenchmarkLCHT-40            	       3	4442440596 ns/op	490023186 B/op	    1381 allocs/op
+BenchmarkSCHT-40            	       3	4393995626 ns/op	404537434 B/op	 9050531 allocs/op
+BenchmarkCMHT-40            	      15	 775941863 ns/op	359606488 B/op	 7035020 allocs/op
+BenchmarkConcMHT-40         	      67	 182100710 ns/op	225110881 B/op	   30253 allocs/op
+BenchmarkACHT-40            	      74	 173722868 ns/op	548483849 B/op	    1363 allocs/op
+BenchmarkUnsafeHTRead-40    	       2	8335653832 ns/op	       0 B/op	       0 allocs/op
+BenchmarkCHTRead-40         	      37	 298490785 ns/op	     338 B/op	       1 allocs/op
+BenchmarkLCHTRead-40        	      40	 292321406 ns/op	     313 B/op	       1 allocs/op
+BenchmarkSCHTRead-40        	      31	 380225229 ns/op	     459 B/op	       2 allocs/op
+BenchmarkCMHTRead-40        	      22	 506275041 ns/op	      16 B/op	       1 allocs/op
+BenchmarkConcHTRead-40      	      38	 298914629 ns/op	      16 B/op	       1 allocs/op
+BenchmarkAHTRead-40         	      43	 266633947 ns/op	      16 B/op	       1 allocs/op
+PASS
+ok  	github.com/fzh/ConcurrentJoin/hashtable	325.698s
+```
+
 [ConcurrentMap](https://github.com/orcaman/concurrent-map)
 
 TODO：
