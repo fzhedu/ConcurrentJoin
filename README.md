@@ -77,8 +77,7 @@ BenchmarkAHTRead-12         	       6	1729392486 ns/op	     272 B/op	       1 al
 
 ```
 BenchmarkUnsafeHT-40        	       9	1455807438 ns/op	809881907 B/op	     889 allocs/op
-BenchmarkCHT-40             	
-       4	3364232825 ns/op	873799196 B/op	   20598 allocs/op
+BenchmarkCHT-40             	       4	3364232825 ns/op	873799196 B/op	   20598 allocs/op
 BenchmarkLCHT-40            	       3	4442440596 ns/op	490023186 B/op	    1381 allocs/op
 BenchmarkSCHT-40            	       3	4393995626 ns/op	404537434 B/op	 9050531 allocs/op
 BenchmarkCMHT-40            	      15	 775941863 ns/op	359606488 B/op	 7035020 allocs/op
