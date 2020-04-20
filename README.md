@@ -74,3 +74,8 @@ BenchmarkConcHTRead-12      	       5	2042129845 ns/op	      92 B/op	       1 al
 BenchmarkAHTRead-12         	       6	1729392486 ns/op	     272 B/op	       1 allocs/op
 ```
 [ConcurrentMap](https://github.com/orcaman/concurrent-map)
+
+TODO：
+
+1. add resize and rehash for `ArrayHashTable` like JAVA hash table
+2. implement a complex concurrent hash table like https://github.com/Avalanche-io/sled
