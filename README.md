@@ -2,8 +2,8 @@ We set even data distribution, where the length of buckets is not too long, beca
 
 From the results below, we see `CmapChangedHashTable` is the best if we use the map to record the buckets. It is slower than `ArrayHashTable` due to lock conflicts. But `ArrayHashTable` need to map a larger range to its length, this may worse the data distribution in the hash table so that to increase the probing time.
 
-However, in [Impala](https://github.com/apache/impala/blob/04fd9ae268d89b07e2a692a916bf2ddcfb2e351b/be/src/exec/hash-table.h), [Spark](https://github.com/apache/spark/blob/master/sql/core/src/main/scala/org/apache/spark/sql/execution/joins/HashedRelation.scala), JAVA [hash table](https://www.jianshu.com/p/6c95f8216950), they take the array to record the buckets, and adopt linear and quadratic probing to solve hash conflicts. So here we pefer the `ArrahHashTable`.
-
+However, in [Impala](https://github.com/apache/impala/blob/04fd9ae268d89b07e2a692a916bf2ddcfb2e351b/be/src/exec/hash-table.h), and [Spark](https://github.com/apache/spark/blob/master/sql/core/src/main/scala/org/apache/spark/sql/execution/joins/HashedRelation.scala), they take the array to record the buckets, and adopt linear and quadratic probing to solve hash conflicts. 
+JAVA [hash table](https://www.jianshu.com/p/6c95f8216950) also use the array, and use the linked list to solve hash conflicts. So here we pefer the `ArrahHashTable`, and use the linked list to solve hash conflicts, similar to JAVA hash table.
 
 ```
 go test -v -bench=. -benchmem -benchtime 10s
