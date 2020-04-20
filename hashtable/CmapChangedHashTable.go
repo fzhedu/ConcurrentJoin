@@ -3,6 +3,7 @@ package hashtable
 import (
 	"fmt"
 )
+// inspired by cmap, but we only need a part of functions
 
 type ConcMapHashTable struct {
 	mp     ConcurrentMap

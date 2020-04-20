@@ -4,6 +4,8 @@ import (
 	"sync/atomic"
 	"unsafe"
 )
+// use array to record buckets instead of map
+// TODO: rehash and resize like JAVA hash table
 
 type ArrayHashTable struct {
 	 writeMap []*Entry

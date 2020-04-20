@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 	"unsafe"
 )
+// use go.sycn.Map
 
 type SyncHashTable struct {
 	 writeMap sync.Map

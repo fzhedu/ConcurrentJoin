@@ -3,6 +3,7 @@ package hashtable
 import (
 	"sync"
 )
+// use a mutex to solve write conflicts
 
 type LockedHashTable struct {
 	 writeMap map[uint64]*Entry

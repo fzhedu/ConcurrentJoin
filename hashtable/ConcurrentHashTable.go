@@ -4,6 +4,7 @@ import (
 	"sync/atomic"
 	"unsafe"
 )
+// inspired by go.sync.Map
 
 func (e *Entry) CASinsert(newEntry *Entry) {
 	for {
