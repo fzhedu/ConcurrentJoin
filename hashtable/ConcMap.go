@@ -4,7 +4,7 @@ import (
 	"sync"
 )
 
-var SHARD_COUNT = 1000
+var SHARD_COUNT = 320
 
 
 // A "thread" safe map of type string:Anything.
